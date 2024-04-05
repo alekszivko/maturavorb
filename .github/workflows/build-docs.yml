@@ -1,0 +1,33 @@
+name: Build and deploy documentation
+
+on:
+  push:
+    branches: ["main"]
+
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Image Version"
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build container image
+        run: docker build -t registry.digitalocean.com/testregistryaleks/maturavorbereitung:1 .
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+            token: ${{ secrets.DIGITAL_OCEAN }}
+
+      - name: Log in to DigitalOcean Container Registry with short-lived credentials
+        run: doctl registry login --expiry-seconds 600
+
+      - name: Push image to DigitalOcean Container Registry
+        run: docker push registry.digitalocean.com/testregistryaleks/maturavorbereitung:1
